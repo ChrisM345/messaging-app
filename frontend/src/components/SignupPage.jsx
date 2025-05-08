@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,6 +24,39 @@ const SignupPage = () => {
       setError("");
     }
   };
+
+  const handleNavigate = () => {
+    navigate("/");
+  };
+
+  const isFormValid = username && password && password == confirmPassword;
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8000/createAccount", {
+        method: "POST",
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        setError(await response.text());
+      } else {
+        alert(await response.text());
+        handleNavigate();
+      }
+    } catch {
+      setError("Error Fetching Backend");
+    }
+  };
+
   return (
     <>
       <div className="flex-col text-center items-center">
@@ -50,8 +85,10 @@ const SignupPage = () => {
             type="password"
           />
           <button
+            onClick={handleCreateAccount}
             className="mt-1 w-4/6 bg-indigo-700 text-white p-2 rounded-md hover:bg-indigo-400 transition"
             type="submit"
+            disabled={!isFormValid}
           >
             Sign up
           </button>
