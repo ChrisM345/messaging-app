@@ -14,6 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 const authRoute = require("./routes/authRoutes");
 app.use(authRoute);
 
+const friendRoute = require("./routes/friendRoutes");
+app.use(friendRoute);
+
 app.get("/", (req, res) => {
   res.send("Welcome");
 });
