@@ -1,4 +1,10 @@
-const { getUserAccount, existingFriend, newFriendRequest } = require("../db/queries");
+const {
+  getUserAccount,
+  existingFriend,
+  newFriendRequest,
+  getSentFriendRequests,
+  getReceivedFriendRequests,
+} = require("../db/queries");
 
 const sendFriendRequest = async (req, res, next) => {
   const { userId, friendUsername } = req.body;
@@ -28,6 +34,16 @@ const sendFriendRequest = async (req, res, next) => {
   }
 };
 
+const sentFriendRequests = async (req, res) => {
+  getSentFriendRequests(parseInt(req.query.userId));
+};
+
+const receivedFriendRequests = async (req, res) => {
+  getReceivedFriendRequests(parseInt(req.query.userId));
+};
+
 module.exports = {
   sendFriendRequest,
+  sentFriendRequests,
+  receivedFriendRequests,
 };
