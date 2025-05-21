@@ -37,7 +37,6 @@ const createAccount = [
 const login = async (req, res, next) => {
   const { username, password } = req.body;
   const user = await getUserAccount(username);
-  console.log("route works");
 
   try {
     if (!user) {
@@ -49,7 +48,6 @@ const login = async (req, res, next) => {
     if (!matchPassword) {
       return res.status(404).send("Incorrect password");
     }
-    console.log(user);
 
     const token = jwt.sign(
       {
