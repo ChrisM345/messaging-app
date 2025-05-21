@@ -59,7 +59,7 @@ const ApplicationPage = () => {
               <div className="main-content flex-1">
                 {selectedView === "home" && <h1>Welcome to the app!</h1>}
                 {selectedView === "friends" && <FriendsView user={user} />}
-                {selectedView === "friendRequests" && <FriendRequestsView />}
+                {selectedView === "friendRequests" && <FriendRequestsView userId={user.userId} />}
                 {selectedView === "directMessages" && <DirectMessagesView />}
               </div>
             </div>
