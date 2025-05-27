@@ -4,6 +4,8 @@ const {
   newFriendRequest,
   getSentFriendRequests,
   getReceivedFriendRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
 } = require("../db/queries");
 
 const sendFriendRequest = async (req, res, next) => {
@@ -35,15 +37,40 @@ const sendFriendRequest = async (req, res, next) => {
 };
 
 const sentFriendRequests = async (req, res) => {
-  getSentFriendRequests(parseInt(req.query.userId));
+  try {
+    const data = await getSentFriendRequests(parseInt(req.query.userId));
+    return res.status(200).json(data);
+  } catch {
+    return res.status(500).send("Failed to fetch sent friend requests.");
+  }
 };
 
 const receivedFriendRequests = async (req, res) => {
-  getReceivedFriendRequests(parseInt(req.query.userId));
+  try {
+    const data = await getReceivedFriendRequests(parseInt(req.query.userId));
+    return res.status(200).json(data);
+  } catch {
+    return res.status(500).send("Failed to fetch received friend requests");
+  }
+};
+
+const handleFriendResponse = async (req, res) => {
+  try {
+    const { requestId, action } = req.body;
+    if (action == "accepted") {
+      await acceptFriendRequest(requestId);
+    } else {
+      await declineFriendRequest(requestId);
+    }
+    return res.status(200).send("OK");
+  } catch {
+    return res.status(500).send("Failed to update friend request");
+  }
 };
 
 module.exports = {
   sendFriendRequest,
   sentFriendRequests,
   receivedFriendRequests,
+  handleFriendResponse,
 };

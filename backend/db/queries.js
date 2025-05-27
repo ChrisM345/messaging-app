@@ -46,6 +46,11 @@ async function getReceivedFriendRequests(userId) {
   const receivedFriendRequests = await prisma.friend.findMany({
     where: {
       receiverId: userId,
+      status: "pending",
+    },
+    include: {
+      sender: true,
+      receiver: true,
     },
   });
   return receivedFriendRequests;
@@ -55,9 +60,35 @@ async function getSentFriendRequests(userId) {
   const sentFriendRequests = await prisma.friend.findMany({
     where: {
       senderId: userId,
+      status: "pending",
+    },
+    include: {
+      sender: true,
+      receiver: true,
     },
   });
   return sentFriendRequests;
+}
+
+async function acceptFriendRequest(requestId) {
+  const acceptRequest = await prisma.friend.update({
+    where: {
+      id: requestId,
+    },
+    data: {
+      status: "accepted",
+    },
+  });
+  return acceptRequest;
+}
+
+async function declineFriendRequest(requestId) {
+  const declineRequest = await prisma.friend.delete({
+    where: {
+      id: requestId,
+    },
+  });
+  return declineRequest;
 }
 
 module.exports = {
@@ -67,4 +98,6 @@ module.exports = {
   newFriendRequest,
   getReceivedFriendRequests,
   getSentFriendRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
 };
