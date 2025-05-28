@@ -91,6 +91,20 @@ async function declineFriendRequest(requestId) {
   return declineRequest;
 }
 
+async function getFriends(userId) {
+  const friends = await prisma.friend.findMany({
+    where: {
+      OR: [{ senderId: userId }, { receiverId: userId }],
+      status: "accepted",
+    },
+    include: {
+      sender: true,
+      receiver: true,
+    },
+  });
+  return friends;
+}
+
 module.exports = {
   createUserAccount,
   getUserAccount,
@@ -100,4 +114,5 @@ module.exports = {
   getSentFriendRequests,
   acceptFriendRequest,
   declineFriendRequest,
+  getFriends,
 };

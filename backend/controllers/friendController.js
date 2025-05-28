@@ -6,6 +6,7 @@ const {
   getReceivedFriendRequests,
   acceptFriendRequest,
   declineFriendRequest,
+  getFriends,
 } = require("../db/queries");
 
 const sendFriendRequest = async (req, res, next) => {
@@ -68,9 +69,19 @@ const handleFriendResponse = async (req, res) => {
   }
 };
 
+const handleGetFriends = async (req, res) => {
+  try {
+    const data = await getFriends(parseInt(req.query.userId));
+    return res.status(200).json(data);
+  } catch {
+    return res.status(500).send("Failed to fetch friends");
+  }
+};
+
 module.exports = {
   sendFriendRequest,
   sentFriendRequests,
   receivedFriendRequests,
   handleFriendResponse,
+  handleGetFriends,
 };
