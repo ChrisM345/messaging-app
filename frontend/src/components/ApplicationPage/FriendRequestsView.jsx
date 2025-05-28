@@ -44,7 +44,7 @@ const FriendRequestsView = ({ userId }) => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to respond to request");
+        setError("Failed to respond to request");
       }
       await fetchFriendRequests();
       setVersion((v) => v + 1);
