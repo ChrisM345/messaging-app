@@ -60,7 +60,7 @@ const ApplicationPage = () => {
                 {selectedView === "home" && <h1>Welcome to the app!</h1>}
                 {selectedView === "friends" && <FriendsView user={user} />}
                 {selectedView === "friendRequests" && <FriendRequestsView userId={user.userId} />}
-                {selectedView === "directMessages" && <DirectMessagesView />}
+                {selectedView === "directMessages" && <DirectMessagesView user={user} />}
               </div>
             </div>
           </div>
