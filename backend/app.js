@@ -17,6 +17,9 @@ app.use(authRoute);
 const friendRoute = require("./routes/friendRoutes");
 app.use(friendRoute);
 
+const messageRoute = require("./routes/messageRoute");
+app.use(messageRoute);
+
 app.get("/", (req, res) => {
   res.send("Welcome");
 });
