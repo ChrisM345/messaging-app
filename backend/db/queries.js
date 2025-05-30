@@ -105,6 +105,17 @@ async function getFriends(userId) {
   return friends;
 }
 
+async function createMessage(senderId, receiverId, content) {
+  const message = await prisma.message.create({
+    data: {
+      senderId,
+      receiverId,
+      content,
+    },
+  });
+  return message;
+}
+
 module.exports = {
   createUserAccount,
   getUserAccount,
@@ -115,4 +126,5 @@ module.exports = {
   acceptFriendRequest,
   declineFriendRequest,
   getFriends,
+  createMessage,
 };
