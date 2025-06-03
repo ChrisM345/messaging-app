@@ -1,11 +1,45 @@
 import { useEffect, useState, useRef } from "react";
+import socket from "../../utils/socket";
 
 const DirectMessagesView = ({ user }) => {
   const [error, setError] = useState("");
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [message, setMessage] = useState("");
+  const [messageHistory, setMessageHistory] = useState([]);
   const textareaRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (socket.connected) {
+      console.log("Already connected to WebSocket server");
+      socket.emit("joinUserRoom", user.userId);
+    }
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      socket.emit("joinUserRoom", user.userId);
+    });
+
+    socket.on("newDirectMessage", (data) => {
+      console.log("New message received:", data);
+      setMessageHistory((prevMessages) => [...prevMessages, data]);
+    });
+
+    return () => {
+      socket.off("newDirectMessage");
+      socket.off("connect");
+    };
+  }, []);
+
+  const sendDirectMessage = (senderId, receiverUsername, content) => {
+    socket.emit("sendDirectMessage", { senderId, receiverUsername, content });
+  };
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messageHistory]);
 
   const fetchFriends = async () => {
     try {
@@ -52,30 +86,50 @@ const DirectMessagesView = ({ user }) => {
     e.preventDefault();
     setError("");
     if (message.trim() === "") return;
-    console.log(message);
-    console.log(user);
-    console.log(selectedFriend);
-    try {
-      const response = await fetch("http://localhost:8000/message/send", {
-        method: "POST",
-        body: JSON.stringify({
-          senderId: user.userId,
-          receiverName: selectedFriend,
-          content: message,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        setError("Failed to send message");
-      }
-    } catch {
-      setError("Failed to send message");
-    }
+    sendDirectMessage(user.userId, selectedFriend, message);
+    // try {
+    //   const response = await fetch("http://localhost:8000/message/send", {
+    //     method: "POST",
+    //     body: JSON.stringify({
+    //       senderId: user.userId,
+    //       receiverName: selectedFriend,
+    //       content: message,
+    //     }),
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
+    //   if (!response.ok) {
+    //     setError("Failed to send message");
+    //   }
+    // } catch {
+    //   setError("Failed to send message");
+    // }
     setMessage("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "40px";
+    }
+  };
+
+  const fetchMessages = async (friendUsername) => {
+    console.log(user);
+    console.log(friendUsername);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/message/history?userId=${user.userId}&friendUsername=${encodeURIComponent(
+          friendUsername
+        )}`,
+        {
+          method: "GET",
+        }
+      );
+      if (!response.ok) {
+        setError("Failed to fetch message history");
+      }
+      const data = await response.json();
+      setMessageHistory(data);
+    } catch {
+      setError("Failed to fetch message history");
     }
   };
 
@@ -90,7 +144,10 @@ const DirectMessagesView = ({ user }) => {
               <div
                 key={friend.id}
                 className="flex items-center bg-white p-3 rounded-lg shadow border border-gray-200 hover:bg-blue-100 transition-colors cursor-pointer"
-                onClick={() => setSelectedFriend(friend.username)}
+                onClick={() => {
+                  setSelectedFriend(friend.username);
+                  fetchMessages(friend.username);
+                }}
               >
                 <ul>
                   <li className="text-lg font-semibold">{friend.username}</li>
@@ -116,10 +173,10 @@ const DirectMessagesView = ({ user }) => {
             {error !== "" && <div className="errorSection">Error: {error}</div>}
             {/* Messages container */}
             <div className="overflow-y-auto p-6 space-y-4" style={{ flex: 1 }}>
-              <h2>Message 1</h2>
-              <h2>Message 2</h2>
-              <h2>Message 3</h2>
-              {/* Replace with real messages */}
+              {messageHistory.map((message) => (
+                <div key={message.id}>{message.content}</div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input form */}
