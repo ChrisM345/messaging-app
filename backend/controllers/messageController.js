@@ -1,4 +1,4 @@
-const { getUserAccount, createMessage } = require("../db/queries");
+const { getUserAccount, createMessage, getMessageHistory } = require("../db/queries");
 
 const sendMessage = async (req, res) => {
   try {
@@ -12,6 +12,19 @@ const sendMessage = async (req, res) => {
   }
 };
 
+const getMessages = async (req, res) => {
+  try {
+    const { userId, friendUsername } = req.query;
+    const friendUser = await getUserAccount(friendUsername);
+    const friendId = parseInt(friendUser.id);
+    const data = await getMessageHistory(parseInt(userId), friendId);
+    return res.status(200).send(data);
+  } catch {
+    return res.status(500).send("failed to fetch message history");
+  }
+};
+
 module.exports = {
   sendMessage,
+  getMessages,
 };
