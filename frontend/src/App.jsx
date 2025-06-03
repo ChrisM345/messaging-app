@@ -13,7 +13,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen bg-white text-gray-900 overflow-hidden">
+    <div className="flex flex-col h-screen bg-white text-gray-900 overflow-hidden">
       <header className="bg-neutral-300 p-3 flex justify-between items-center">
         <h1 className="text-xl font-semibold">Messenger App</h1>
         {user && (
@@ -31,11 +31,10 @@ export default function App() {
           </>
         )}
       </header>
-      <div className="">
-        <main className="">
-          <Outlet />
-        </main>
-      </div>
+
+      <main className="flex-1 overflow-hidden">
+        <Outlet />
+      </main>
     </div>
   );
 }
