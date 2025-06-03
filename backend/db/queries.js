@@ -112,6 +112,9 @@ async function createMessage(senderId, receiverId, content) {
       receiverId,
       content,
     },
+    include: {
+      sender: true,
+    },
   });
   return message;
 }
@@ -123,6 +126,9 @@ async function getMessageHistory(userId, friendId) {
         { senderId: userId, receiverId: friendId },
         { senderId: friendId, receiverId: userId },
       ],
+    },
+    include: {
+      sender: true,
     },
     orderBy: {
       createdAt: "asc",
