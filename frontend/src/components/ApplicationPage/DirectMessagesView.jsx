@@ -135,7 +135,7 @@ const DirectMessagesView = ({ user }) => {
 
   return (
     <>
-      <div className="flex h-screen">
+      <div className="flex" style={{ height: "calc(100vh - 180px" }}>
         {/* Sidebar - Friends list */}
         <div className="w-64 bg-gray-100 p-2 border-r border-gray-300 overflow-y-auto">
           <h2 className="text-xl font-bold mb-4">Friends</h2>
@@ -174,7 +174,13 @@ const DirectMessagesView = ({ user }) => {
             {/* Messages container */}
             <div className="overflow-y-auto p-6 space-y-4" style={{ flex: 1 }}>
               {messageHistory.map((message) => (
-                <div key={message.id}>{message.content}</div>
+                <div key={message.id} className="bg-gray-100 rounded-md shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-indigo-700">{message.sender.username}</span>
+                    <span className="text-xs text-gray-500">{new Date(message.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p className="text-gray-800 whitespace-pre-wrap">{message.content}</p>
+                </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
