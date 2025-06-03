@@ -116,6 +116,21 @@ async function createMessage(senderId, receiverId, content) {
   return message;
 }
 
+async function getMessageHistory(userId, friendId) {
+  const messageHistory = await prisma.message.findMany({
+    where: {
+      OR: [
+        { senderId: userId, receiverId: friendId },
+        { senderId: friendId, receiverId: userId },
+      ],
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+  return messageHistory;
+}
+
 module.exports = {
   createUserAccount,
   getUserAccount,
@@ -127,4 +142,5 @@ module.exports = {
   declineFriendRequest,
   getFriends,
   createMessage,
+  getMessageHistory,
 };
