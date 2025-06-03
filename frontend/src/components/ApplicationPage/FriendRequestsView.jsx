@@ -3,7 +3,6 @@ const FriendRequestsView = ({ userId }) => {
   const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
   const [sentFriendRequests, setSentFriendRequests] = useState([]);
   const [error, setError] = useState("");
-  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     fetchFriendRequests();
@@ -47,7 +46,6 @@ const FriendRequestsView = ({ userId }) => {
         setError("Failed to respond to request");
       }
       await fetchFriendRequests();
-      setVersion((v) => v + 1);
     } catch {
       setError("Failed to update friend request");
     }
