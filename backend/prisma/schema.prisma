@@ -27,11 +27,14 @@ model User {
 }
 
 model Friend {
-  id         Int          @id @default(autoincrement())
-  senderId   Int
-  receiverId Int
-  status     FriendStatus @default(pending)
-  createdAt  DateTime     @default(now())
+  id             Int          @id @default(autoincrement())
+  senderId       Int
+  receiverId     Int
+  status         FriendStatus @default(pending)
+  createdAt      DateTime     @default(now())
+  lastMessageAt  DateTime     @default("1970-01-01T00:00:00Z")
+  senderUnread   Boolean      @default(false)
+  receiverUnread Boolean      @default(false)
 
   sender   User @relation("SentFriendRequests", fields: [senderId], references: [id])
   receiver User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
@@ -45,6 +48,7 @@ model Message {
   receiverId Int
   content    String
   createdAt  DateTime @default(now())
+  read       Boolean  @default(false)
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
