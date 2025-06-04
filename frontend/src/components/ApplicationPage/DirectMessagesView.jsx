@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import socket from "../../utils/socket";
+import { useAuth } from "../../contexts/AuthContext";
 
 const DirectMessagesView = ({ user }) => {
+  const { user: currentUser } = useAuth();
   const [error, setError] = useState("");
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const selectedFriendRef = useRef(null);
   const [message, setMessage] = useState("");
   const [messageHistory, setMessageHistory] = useState([]);
   const textareaRef = useRef(null);
@@ -22,7 +25,10 @@ const DirectMessagesView = ({ user }) => {
 
     socket.on("newDirectMessage", (data) => {
       console.log("New message received:", data);
-      setMessageHistory((prevMessages) => [...prevMessages, data]);
+      const otherUser = data.sender.username === currentUser.username ? data.receiver.username : data.sender.username;
+      if (otherUser === selectedFriendRef.current) {
+        setMessageHistory((prevMessages) => [...prevMessages, data]);
+      }
     });
 
     return () => {
@@ -40,6 +46,10 @@ const DirectMessagesView = ({ user }) => {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messageHistory]);
+
+  useEffect(() => {
+    selectedFriendRef.current = selectedFriend;
+  }, [selectedFriend]);
 
   const fetchFriends = async () => {
     try {
