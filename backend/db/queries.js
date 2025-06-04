@@ -97,11 +97,15 @@ async function getFriends(userId) {
       OR: [{ senderId: userId }, { receiverId: userId }],
       status: "accepted",
     },
+    orderBy: {
+      lastMessageAt: "desc",
+    },
     include: {
       sender: true,
       receiver: true,
     },
   });
+
   return friends;
 }
 
@@ -114,12 +118,24 @@ async function createMessage(senderId, receiverId, content) {
     },
     include: {
       sender: true,
+      receiver: true,
     },
   });
   return message;
 }
 
 async function getMessageHistory(userId, friendId) {
+  await prisma.message.updateMany({
+    where: {
+      senderId: friendId,
+      receiverId: userId,
+      read: false,
+    },
+    data: {
+      read: true,
+    },
+  });
+
   const messageHistory = await prisma.message.findMany({
     where: {
       OR: [
@@ -137,6 +153,21 @@ async function getMessageHistory(userId, friendId) {
   return messageHistory;
 }
 
+async function updateLastMessageAt(senderId, receiverId) {
+  const updateLastMessage = await prisma.friend.updateMany({
+    where: {
+      OR: [
+        { senderId: senderId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: senderId },
+      ],
+    },
+    data: {
+      lastMessageAt: new Date(),
+    },
+  });
+  return updateLastMessage;
+}
+
 module.exports = {
   createUserAccount,
   getUserAccount,
@@ -149,4 +180,5 @@ module.exports = {
   getFriends,
   createMessage,
   getMessageHistory,
+  updateLastMessageAt,
 };
