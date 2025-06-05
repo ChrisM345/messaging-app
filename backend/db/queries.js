@@ -70,7 +70,22 @@ async function getSentFriendRequests(userId) {
   return sentFriendRequests;
 }
 
-async function acceptFriendRequest(requestId) {
+async function acceptFriendRequest(requestId, userId) {
+  // Fetch the friend request
+  const request = await prisma.friend.findUnique({
+    where: { id: requestId },
+  });
+
+  if (!request) {
+    throw new Error("Friend request not found.");
+  }
+
+  // ✅ Only the receiver can accept
+  if (request.receiverId !== userId) {
+    throw new Error("Unauthorized: You are not allowed to accept this request.");
+  }
+
+  // Update the status to accepted
   const acceptRequest = await prisma.friend.update({
     where: {
       id: requestId,
@@ -79,6 +94,7 @@ async function acceptFriendRequest(requestId) {
       status: "accepted",
     },
   });
+
   return acceptRequest;
 }
 
@@ -125,6 +141,7 @@ async function createMessage(senderId, receiverId, content) {
 }
 
 async function getMessageHistory(userId, friendId) {
+  // Mark individual messages as read
   await prisma.message.updateMany({
     where: {
       senderId: friendId,
@@ -136,6 +153,29 @@ async function getMessageHistory(userId, friendId) {
     },
   });
 
+  // Find the friend record (in either direction)
+  const friend = await prisma.friend.findFirst({
+    where: {
+      OR: [
+        { senderId: userId, receiverId: friendId },
+        { senderId: friendId, receiverId: userId },
+      ],
+    },
+  });
+
+  if (friend) {
+    const unreadField = friend.senderId === userId ? "senderUnread" : "receiverUnread";
+
+    // Set the correct unread flag to false
+    await prisma.friend.update({
+      where: { id: friend.id },
+      data: {
+        [unreadField]: false,
+      },
+    });
+  }
+
+  // Fetch full message history
   const messageHistory = await prisma.message.findMany({
     where: {
       OR: [
@@ -150,21 +190,32 @@ async function getMessageHistory(userId, friendId) {
       createdAt: "asc",
     },
   });
+
   return messageHistory;
 }
 
 async function updateLastMessageAt(senderId, receiverId) {
-  const updateLastMessage = await prisma.friend.updateMany({
+  const friend = await prisma.friend.findFirst({
     where: {
       OR: [
         { senderId: senderId, receiverId: receiverId },
         { senderId: receiverId, receiverId: senderId },
       ],
     },
+  });
+
+  if (!friend) return null;
+
+  const unreadField = friend.senderId === receiverId ? "senderUnread" : "receiverUnread";
+
+  const updateLastMessage = await prisma.friend.update({
+    where: { id: friend.id },
     data: {
       lastMessageAt: new Date(),
+      [unreadField]: true,
     },
   });
+
   return updateLastMessage;
 }
 
