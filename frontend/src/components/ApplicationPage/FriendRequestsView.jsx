@@ -3,6 +3,7 @@ const FriendRequestsView = ({ userId }) => {
   const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
   const [sentFriendRequests, setSentFriendRequests] = useState([]);
   const [error, setError] = useState("");
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchFriendRequests();
@@ -13,9 +14,17 @@ const FriendRequestsView = ({ userId }) => {
       const [receivedReq, sentReq] = await Promise.all([
         fetch(`http://localhost:8000/friendRequests/received?userId=${userId}`, {
           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }),
         fetch(`http://localhost:8000/friendRequests/sent?userId=${userId}`, {
           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }),
       ]);
 
@@ -38,6 +47,7 @@ const FriendRequestsView = ({ userId }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ requestId, action }),
       });
