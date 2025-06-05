@@ -5,6 +5,7 @@ const FriendsView = ({ user }) => {
   const [error, setError] = useState("");
   const [searchUsername, setSearchUsername] = useState("");
   const [friends, setFriends] = useState([]);
+  const token = localStorage.getItem("token");
 
   const handleSearchUsername = (e) => {
     setSearchUsername(e.target.value.trim());
@@ -23,6 +24,7 @@ const FriendsView = ({ user }) => {
         }),
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) {
@@ -40,6 +42,10 @@ const FriendsView = ({ user }) => {
     try {
       const response = await fetch(`http://localhost:8000/friends?userId=${user.userId}`, {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) {
         setError("Error fetching friends");
@@ -67,6 +73,7 @@ const FriendsView = ({ user }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ requestId, action }),
       });
@@ -106,7 +113,7 @@ const FriendsView = ({ user }) => {
       </div>
       {error != "" && <div className="errorSection">Error: {error}</div>}
       <h2 className="text-xl font-semibold mb-4 my-4">Friends List</h2>
-      <div className="space-y-3">
+      <div className="overflow-y-auto space-y-3" style={{ height: "calc(100vh - 350px" }}>
         {friends.length > 0 ? (
           friends.map((friend) => (
             <div
