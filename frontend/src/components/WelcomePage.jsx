@@ -47,8 +47,6 @@ const WelcomePage = () => {
         const { token, message, username } = await response.json();
         localStorage.setItem("token", token);
         localStorage.setItem("username", username);
-        console.log(token);
-        console.log(message);
         alert(message);
         handleNavigate();
       }
