@@ -12,8 +12,12 @@ const DirectMessagesView = ({ user }) => {
   const [messageHistory, setMessageHistory] = useState([]);
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
+    const handleRefresh = () => {
+      fetchFriends();
+    };
     if (socket.connected) {
       console.log("Already connected to WebSocket server");
       socket.emit("joinUserRoom", user.userId);
@@ -31,8 +35,11 @@ const DirectMessagesView = ({ user }) => {
       }
     });
 
+    socket.on("refreshFriendsList", handleRefresh);
+
     return () => {
       socket.off("newDirectMessage");
+      socket.off("refreshFriendsList");
       socket.off("connect");
     };
   }, []);
@@ -55,6 +62,10 @@ const DirectMessagesView = ({ user }) => {
     try {
       const response = await fetch(`http://localhost:8000/friends?userId=${user.userId}`, {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) {
         setError("Error fetching friends");
@@ -65,8 +76,7 @@ const DirectMessagesView = ({ user }) => {
       const cleanedData = data.map((friend) => {
         const userInfo = friend.senderId === user.userId ? friend.receiver : friend.sender;
         return {
-          ...userInfo, // spreads username, email, etc.
-          friendId: friend.id, // this is the ID of the friend record
+          ...friend,
         };
       });
       setFriends(cleanedData);
@@ -122,8 +132,6 @@ const DirectMessagesView = ({ user }) => {
   };
 
   const fetchMessages = async (friendUsername) => {
-    console.log(user);
-    console.log(friendUsername);
     try {
       const response = await fetch(
         `http://localhost:8000/message/history?userId=${user.userId}&friendUsername=${encodeURIComponent(
@@ -131,6 +139,10 @@ const DirectMessagesView = ({ user }) => {
         )}`,
         {
           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       if (!response.ok) {
@@ -150,20 +162,29 @@ const DirectMessagesView = ({ user }) => {
         <div className="w-64 bg-gray-100 p-2 border-r border-gray-300 overflow-y-auto">
           <h2 className="text-xl font-bold mb-4">Friends</h2>
           <div className="space-y-2">
-            {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className="flex items-center bg-white p-3 rounded-lg shadow border border-gray-200 hover:bg-blue-100 transition-colors cursor-pointer"
-                onClick={() => {
-                  setSelectedFriend(friend.username);
-                  fetchMessages(friend.username);
-                }}
-              >
-                <ul>
-                  <li className="text-lg font-semibold">{friend.username}</li>
-                </ul>
-              </div>
-            ))}
+            {friends.map((friend) => {
+              const isSender = currentUser.userId === friend.senderId;
+              const otherUser = isSender ? friend.receiver : friend.sender;
+              const hasUnread = isSender ? friend.senderUnread : friend.receiverUnread;
+
+              return (
+                <div
+                  key={friend.id}
+                  className="flex items-center bg-white p-3 rounded-lg shadow border border-gray-200 hover:bg-blue-100 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedFriend(otherUser.username);
+                    fetchMessages(otherUser.username);
+                  }}
+                >
+                  <ul>
+                    <li className="text-lg font-semibold">
+                      {otherUser.username}
+                      {hasUnread && <span className="text-red-500 ml-2 font-bold">!</span>}
+                    </li>
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </div>
 
