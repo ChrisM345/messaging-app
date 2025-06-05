@@ -10,7 +10,8 @@ const {
 } = require("../db/queries");
 
 const sendFriendRequest = async (req, res, next) => {
-  const { userId, friendUsername } = req.body;
+  const userId = req.user.userId;
+  const { friendUsername } = req.body;
   const friendAccount = await getUserAccount(friendUsername);
 
   try {
@@ -38,8 +39,9 @@ const sendFriendRequest = async (req, res, next) => {
 };
 
 const sentFriendRequests = async (req, res) => {
+  const userId = req.user.userId;
   try {
-    const data = await getSentFriendRequests(parseInt(req.query.userId));
+    const data = await getSentFriendRequests(parseInt(userId));
     return res.status(200).json(data);
   } catch {
     return res.status(500).send("Failed to fetch sent friend requests.");
@@ -47,8 +49,12 @@ const sentFriendRequests = async (req, res) => {
 };
 
 const receivedFriendRequests = async (req, res) => {
+  const userId = req.user.userId;
+  if (parseInt(userId) !== parseInt(req.query.userId)) {
+    return res.status(403).send("Forbidden: Cannot access another user's friend requests.");
+  }
   try {
-    const data = await getReceivedFriendRequests(parseInt(req.query.userId));
+    const data = await getReceivedFriendRequests(parseInt(userId));
     return res.status(200).json(data);
   } catch {
     return res.status(500).send("Failed to fetch received friend requests");
@@ -59,7 +65,7 @@ const handleFriendResponse = async (req, res) => {
   try {
     const { requestId, action } = req.body;
     if (action == "accepted") {
-      await acceptFriendRequest(requestId);
+      await acceptFriendRequest(requestId, parseInt(req.user.userId));
     } else {
       await declineFriendRequest(requestId);
     }
@@ -70,8 +76,12 @@ const handleFriendResponse = async (req, res) => {
 };
 
 const handleGetFriends = async (req, res) => {
+  const userId = req.user.userId;
+  if (parseInt(userId) !== parseInt(req.query.userId)) {
+    return res.status(403).send("Forbidden: Cannot access another user's friends.");
+  }
   try {
-    const data = await getFriends(parseInt(req.query.userId));
+    const data = await getFriends(parseInt(userId));
     return res.status(200).json(data);
   } catch {
     return res.status(500).send("Failed to fetch friends");
