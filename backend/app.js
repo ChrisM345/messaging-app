@@ -4,7 +4,7 @@ const cors = require("cors");
 const PORT = process.env.PORT || 8000;
 const http = require("http");
 const { Server } = require("socket.io");
-const { createMessage, getUserAccount } = require("./db/queries");
+const { createMessage, getUserAccount, updateLastMessageAt } = require("./db/queries");
 
 let corsOptions = {
   origin: ["http://127.0.0.1:5173", "http://127.0.0.1:5174"],
@@ -20,6 +20,7 @@ const io = new Server(server, {
   },
 });
 
+app.set("io", io);
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,12 +53,15 @@ io.on("connection", (socket) => {
       const receiverUser = await getUserAccount(receiverUsername);
       const receiverId = receiverUser.id;
       const savedMessage = await createMessage(parseInt(senderId), parseInt(receiverId), content);
+      await updateLastMessageAt(parseInt(senderId), parseInt(receiverId));
 
       // Emit to room
       io.to(`user_${receiverId}`).emit("newDirectMessage", savedMessage);
+      io.to(`user_${receiverId}`).emit("refreshFriendsList");
 
       // Emit to sender's room
       io.to(`user_${senderId}`).emit("newDirectMessage", savedMessage);
+      io.to(`user_${senderId}`).emit("refreshFriendsList");
     } catch (error) {
       console.log("Error saving or emitting message:", error);
       socket.emit("ErrorMessage", { error: "Failed to send message." });
